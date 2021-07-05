@@ -217,7 +217,7 @@ const Layout = ({ children }) => {
 					<FastfoodIcon className={classes.icon} fontSize='large' />
 					<Typography variant='h3'>
 						<Link href='/' className={classes.link}>
-							FODS
+							FooDery
 						</Link>
 					</Typography>
 					{user.uname && user.type !== 'delivery' && location.pathname === '/dashboard' && (

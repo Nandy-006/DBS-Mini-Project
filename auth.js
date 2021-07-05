@@ -9,8 +9,7 @@ const unauth = (req, res, next) => {
 };
 
 const authCustomer = (req, res, next) => {
-	if (req.session && req.session.user && req.session.user.type === 'customer')
-		next();
+	if (req.session && req.session.user && req.session.user.type === 'customer') next();
 	else res.status(401).send('Authorized only to customers');
 };
 

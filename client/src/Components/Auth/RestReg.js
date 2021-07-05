@@ -9,7 +9,9 @@ import HelpOutlineOutlinedIcon from '@material-ui/icons/HelpOutlineOutlined';
 import CloseOutlinedIcon from '@material-ui/icons/CloseOutlined';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddIcon from '@material-ui/icons/Add';
-import { setErrorBar, setLoading } from '../../Redux/varSlice';
+import { setErrorBar, setLoading, setSuccessBar } from '../../Redux/varSlice';
+import userSchema from '../../Validation/UserVal';
+import restSchema from '../../Validation/RestVal';
 import imageUpload from '../../Firebase/imageUpload';
 
 const useStyles = makeStyles((theme) => ({
@@ -68,58 +70,87 @@ const RestReg = () => {
 
 	const submitHandler = async (e) => {
 		e.preventDefault();
-		if (pass !== confirm) {
-			setError(true);
-			setPass('');
-			setConfirm('');
-		} else {
-			dispatch(setLoading(true));
-			if (image) {
-				const url = await imageUpload(image, 'restaurants');
-				setImg_link(url);
-			}
-			const details = {
-				type: 'restaurant',
+		try {
+			let result = userSchema.validate({
 				uname,
 				pass,
+				confirm,
 				firstname,
 				lastname,
 				phone,
-				email,
-				fssai,
-				rest_name,
-				img_link,
-				aline1,
-				aline2,
-				city,
-				pin,
-				lat,
-				long,
-				isVeg,
-				phones
-			};
-			try {
-				await axios.post('http://localhost:5000/signup', details);
-				dispatch(setLoading(false));
-				history.push('/signin');
-			} catch (err) {
-				dispatch(setLoading(false));
-				if (err.response.data.message) dispatch(setErrorBar(err.response.data.message));
-				else console.log(err);
+				email
+			});
+			if (result.error) {
+				dispatch(setErrorBar(result.error.message));
+			} else {
+				result = restSchema.validate({
+					fssai,
+					rest_name,
+					aline1,
+					aline2,
+					city,
+					pin,
+					isVeg,
+					phones
+				});
+
+				if (result.error) {
+					dispatch(setErrorBar(result.error.message));
+				} else {
+					dispatch(setLoading(true));
+					if (image) {
+						const url = await imageUpload(image, 'restaurants');
+						setImg_link(url);
+					}
+					const details = {
+						type: 'restaurant',
+						uname,
+						pass,
+						firstname,
+						lastname,
+						phone,
+						email,
+						fssai,
+						rest_name,
+						img_link,
+						aline1,
+						aline2,
+						city,
+						pin,
+						lat,
+						long,
+						isVeg,
+						phones
+					};
+					await axios.post('http://localhost:5000/signup', details);
+					dispatch(setLoading(false));
+					dispatch(setSuccessBar('Created account!'));
+					history.push('/signin');
+				}
 			}
+		} catch (err) {
+			dispatch(setLoading(false));
+			if (err.response && err.response.data.message)
+				dispatch(setErrorBar(err.response.data.message));
+			else dispatch(setErrorBar(err.message));
 		}
 	};
 
 	const checkUname = async (e) => {
-		if (uname !== '') {
-			try {
+		try {
+			const result = userSchema.extract('uname').validate(uname);
+			console.log(result);
+			if (result.error) {
+				dispatch(setErrorBar(result.error.message));
+			} else {
 				const res = await axios.get('http://localhost:5000/signup', { params: { uname } });
 				if (res.data.isTaken) setUnameStatus('TAKEN');
 				else setUnameStatus('OK');
-			} catch (err) {
-				if (err.response.data.message) dispatch(setErrorBar(err.response.data.message));
-				else console.log(err);
 			}
+		} catch (err) {
+			if (err.response && err.response.data.message)
+				dispatch(setErrorBar(err.response.data.message));
+			else dispatch(setErrorBar(err.message));
 		}
 	};
 

@@ -9,6 +9,7 @@ import DoneIcon from '@material-ui/icons/Done';
 import HelpOutlineOutlinedIcon from '@material-ui/icons/HelpOutlineOutlined';
 import CloseOutlinedIcon from '@material-ui/icons/CloseOutlined';
 import userSchema from '../../Validation/UserVal';
+import custSchema from '../../Validation/CustVal';
 import { setErrorBar, setSuccessBar } from '../../Redux/varSlice';
 
 const useStyles = makeStyles((theme) => ({
@@ -70,35 +71,44 @@ const CustReg = () => {
 			if (result.error) {
 				dispatch(setErrorBar(result.error.message));
 			} else {
-				const address = aline1 + aline2 + city + pin;
-				const provider = new OpenStreetMapProvider();
-				const results = await provider.search({ query: address });
-				let lat, long;
-				if (results.length) {
-					lat = results[0].y;
-					long = results[0].x;
-				} else {
-					lat = 13.006038;
-					long = 77.603421;
-				}
-				const details = {
-					type: 'customer',
-					uname,
-					pass,
-					firstname,
-					lastname,
-					phone,
-					email,
+				result = custSchema.validate({
 					aline1,
 					aline2,
 					city,
-					pin,
-					lat,
-					long
-				};
-				await axios.post('http://localhost:5000/signup', details);
-				dispatch(setSuccessBar('Created account!'));
-				history.push('/signin');
+					pin
+				});
+				if (result.error) dispatch(setErrorBar(result.error.message));
+				else {
+					const address = aline1 + aline2 + city + pin;
+					const provider = new OpenStreetMapProvider();
+					const results = await provider.search({ query: address });
+					let lat, long;
+					if (results.length) {
+						lat = results[0].y;
+						long = results[0].x;
+					} else {
+						lat = 13.006038;
+						long = 77.603421;
+					}
+					const details = {
+						type: 'customer',
+						uname,
+						pass,
+						firstname,
+						lastname,
+						phone,
+						email,
+						aline1,
+						aline2,
+						city,
+						pin,
+						lat,
+						long
+					};
+					await axios.post('http://localhost:5000/signup', details);
+					dispatch(setSuccessBar('Created account!'));
+					history.push('/signin');
+				}
 			}
 		} catch (err) {
 			if (err.response && err.response.data.message)
@@ -112,7 +122,6 @@ const CustReg = () => {
 			const result = userSchema.extract('uname').validate(uname);
 			console.log(result);
 			if (result.error) {
-				console.log(result);
 				dispatch(setErrorBar(result.error.message));
 			} else {
 				const res = await axios.get('http://localhost:5000/signup', { params: { uname } });

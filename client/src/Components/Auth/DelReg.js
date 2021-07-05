@@ -57,6 +57,7 @@ const DelReg = () => {
 
 	const submitHandler = async (e) => {
 		e.preventDefault();
+
 		if (pass !== confirm) {
 			setError(true);
 			setPass('');
